@@ -15,7 +15,7 @@
 
 
 // ! To work for backward conditioning, IsCSOff would need to be like triggerUS, having more than 2 states.
-
+// ! With paired stim, still not working for USLatency < delayGatingPMTBefPulse.
 
 
 char inputArray[240];
@@ -29,8 +29,9 @@ boolean IsCSOff = true;
 boolean IsPMTOff = false;
 // boolean PMTOff = true;
 
-const int delayGatingPMTBefPulse = 500;  // ms
-const int delayGatingPMTAftPulse = 1000;  // ms
+
+const int delayGatingPMTBefPulse = 250;  // ms
+const int delayGatingPMTAftPulse = 100;  // ms
 // Time each white CS LED is ON
 const int CSDuration = 10000;
 const int mainPWMCycle = 999;
