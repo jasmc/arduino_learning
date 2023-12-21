@@ -30,8 +30,8 @@ boolean IsPMTOff = false;
 // boolean PMTOff = true;
 
 
-const int delayGatingPMTBefPulse = 250;  // ms
-const int delayGatingPMTAftPulse = 100;  // ms
+const int delayGatingPMTBefPulse = 235;  // ms
+const int delayGatingPMTAftPulse = 0;  // ms
 // Time each white CS LED is ON
 const int CSDuration = 10000;
 const int mainPWMCycle = 999;
