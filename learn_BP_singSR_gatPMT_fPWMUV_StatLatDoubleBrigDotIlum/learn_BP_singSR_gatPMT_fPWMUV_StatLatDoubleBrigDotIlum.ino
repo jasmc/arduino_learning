@@ -31,7 +31,7 @@ boolean IsPMTOff = false;
 
 
 const int delayGatingPMTBefPulse = 235;  // ms
-const int delayGatingPMTAftPulse = 0;  // ms
+const int delayGatingPMTAftPulse = 0;    // ms
 // Time each white CS LED is ON
 const int CSDuration = 10000;
 const int mainPWMCycle = 999;
@@ -68,407 +68,352 @@ unsigned long timerUS;
 
 //#define DEBUG 0
 
-void setup()
-{
-	pinMode(PMTGatingPin, OUTPUT);
-	inputString.reserve(240);
-	pinMode(dataPin, OUTPUT);
-	pinMode(clockPin, OUTPUT);
-	pinMode(latchPin, OUTPUT);
-	pinMode(outputEnablePin, OUTPUT);
-	delay(10);
-	pinMode(USPin, OUTPUT);
-	pinMode(10, OUTPUT);
-	Serial.begin(115200);
-	DDRB = 0x07; // set OC1A pin output (among others)
-	PORTB = 0;
-	TCNT1 = 0; // clear counter
-	ICR1 = mainPWMCycle;
-	TCCR1A = 0b10000010;  // non-inverting, fast PWM
-	TCCR1B = 0b00011001;  // fast PWM, full speed
-	OCR1A = mainPWMCycle; // 1 % strobe
-	// switchLightsOff();
-	finishCS();
-	switchPMT(true);
+void setup() {
+  pinMode(PMTGatingPin, OUTPUT);
+  inputString.reserve(240);
+  pinMode(dataPin, OUTPUT);
+  pinMode(clockPin, OUTPUT);
+  pinMode(latchPin, OUTPUT);
+  pinMode(outputEnablePin, OUTPUT);
+  delay(10);
+  pinMode(USPin, OUTPUT);
+  pinMode(10, OUTPUT);
+  Serial.begin(115200);
+  DDRB = 0x07;  // set OC1A pin output (among others)
+  PORTB = 0;
+  TCNT1 = 0;  // clear counter
+  ICR1 = mainPWMCycle;
+  TCCR1A = 0b10000010;   // non-inverting, fast PWM
+  TCCR1B = 0b00011001;   // fast PWM, full speed
+  OCR1A = mainPWMCycle;  // 1 % strobe
+  // switchLightsOff();
+  finishCS();
+  switchPMT(true);
 }
 
-void loop()
-{
-	if (stringComplete)
-	{
-		// Cleans input and separates in spaces
-		inputString.trim();
-		inputString.toCharArray(inputArray, 240);
-		char *command = strtok(inputArray, " ");
-		
-		if (strcmp(command, "STIM") == 0)
-		{
-			if (currentStatus != 1)
-			{
-				command = strtok(0, " ");
-				CSUS = atof(command);
-				command = strtok(0, " ");
-				LorR = atof(command);
-				command = strtok(0, " ");
-				USDuration = atof(command);
-				command = strtok(0, " ");
-				USpower = atof(command);
-				command = strtok(0, " ");
-				USLatency = atof(command);
+void loop() {
+  if (stringComplete) {
+    // Cleans input and separates in spaces
+    inputString.trim();
+    inputString.toCharArray(inputArray, 240);
+    char *command = strtok(inputArray, " ");
 
-				USPower = generateCycle(USpower);
+    if (strcmp(command, "STIM") == 0) {
+      if (currentStatus != 1) {
+        command = strtok(0, " ");
+        CSUS = atof(command);
+        command = strtok(0, " ");
+        LorR = atof(command);
+        command = strtok(0, " ");
+        USDuration = atof(command);
+        command = strtok(0, " ");
+        USpower = atof(command);
+        command = strtok(0, " ");
+        USLatency = atof(command);
 
-				currentStatus = 1;
-			}
-			else
-			{
-				command = strtok(0, " ");
+        USPower = generateCycle(USpower);
 
-				reinforcer = atof(command);
+        currentStatus = 1;
+      } else {
+        command = strtok(0, " ");
 
-				if (reinforcer == 2)
-				{
-					command = strtok(0, " ");
-					command = strtok(0, " ");
-					USDuration = atof(command);
-					command = strtok(0, " ");
-					USpower = atof(command);
+        reinforcer = atof(command);
 
-					USLatency = delayGatingPMTBefPulse;
-					PMTLatency = 0;
+        if (reinforcer == 2) {
+          command = strtok(0, " ");
+          command = strtok(0, " ");
+          USDuration = atof(command);
+          command = strtok(0, " ");
+          USpower = atof(command);
 
-					USPower = generateCycle(USpower);
+          USLatency = delayGatingPMTBefPulse;
+          PMTLatency = 0;
 
-					triggerUS = 1;
-				}
-			}
-		}
+          USPower = generateCycle(USpower);
 
-		else if (strcmp(command, "BREAK") == 0)
-		{
-			currentStatus = 0;
-			oldStatus = 1;
-			// LightsOff = false;
-			// PMTOff = false; 
-		}
+          triggerUS = 1;
+        }
+      }
+    }
 
-		else if (strcmp(command, "OFF") == 0)
-		{
-			currentStatus = 2;
-			// oldStatus = 1;
-			// LightsOff = true;
-			// PMTOff = true;
-			// if (LightsOff)
-			// {
-			// switchLightsOff();
-			// LightsOff = false;
-			// }
-		}
+    else if (strcmp(command, "BREAK") == 0) {
+      currentStatus = 0;
+      oldStatus = 1;
+      // LightsOff = false;
+      // PMTOff = false;
+    }
 
-		else if (strcmp(command, "STARTACQUISITION") == 0)
-		{
-			digitalWrite(startStopAcq, HIGH);
-		}
+    else if (strcmp(command, "OFF") == 0) {
+      currentStatus = 2;
+      // oldStatus = 1;
+      // LightsOff = true;
+      // PMTOff = true;
+      // if (LightsOff)
+      // {
+      // switchLightsOff();
+      // LightsOff = false;
+      // }
+    }
 
-		else if (strcmp(command, "STOPACQUISITION") == 0)
-		{
-			digitalWrite(startStopAcq, LOW);
-		}
+    else if (strcmp(command, "STARTACQUISITION") == 0) {
+      digitalWrite(startStopAcq, HIGH);
+    }
 
-		// Clean variables used to receive serial data.
-		inputString = "";
-		stringComplete = false;
-		memset(&inputArray[0], 0, sizeof(inputArray));
-	}
+    else if (strcmp(command, "STOPACQUISITION") == 0) {
+      digitalWrite(startStopAcq, LOW);
+    }
 
-	// LED STATUS ZONE AND CONTROL
-	switch (currentStatus)
-	{
+    // Clean variables used to receive serial data.
+    inputString = "";
+    stringComplete = false;
+    memset(&inputArray[0], 0, sizeof(inputArray));
+  }
 
-//* BREAK or end of stim.
-	case 0:
-		if (oldStatus != 0)
-		{
-			finishCS();
-			finishUS();
+  // LED STATUS ZONE AND CONTROL
+  switch (currentStatus) {
 
-			IsNewRep = true;
-			
-			triggerUS = 0;
+      //* BREAK or end of stim.
+    case 0:
+      if (oldStatus != 0) {
+        finishCS();
+        finishUS();
 
-			oldStatus = 0;
-		}
+        IsNewRep = true;
 
-		if (IsPMTOff)
-		{
-	//* Switch on the PMT.
-			if (millis() - timerUS > delayGatingPMTAftPulse)
-			{
-				switchPMT(true);
-			}	
-		}
-		break;
+        triggerUS = 0;
 
-//* OFF
-	case 2:
-		if (oldStatus != 2)
-		{
-			switchLightsOff();
+        oldStatus = 0;
+      }
 
-			IsNewRep = true;
-			
-			triggerUS = 0;
+      if (IsPMTOff) {
+        //* Switch on the PMT.
+        if (millis() - timerUS > delayGatingPMTAftPulse) {
+          switchPMT(true);
+        }
+      }
+      break;
 
-			oldStatus = 2;
-		}
-		
-		break;
-//* STIM
-	case 1:
+      //* OFF
+    case 2:
+      if (oldStatus != 2) {
+        switchLightsOff();
 
-		if (oldStatus != 1)
-		{
+        IsNewRep = true;
 
-			if (IsNewRep)
-			{
-				if (CSUS != 0)
-				{
-					triggerUS = 1;
+        triggerUS = 0;
 
-					if (CSUS == 1)
-					{
-						PMTLatency = USLatency - delayGatingPMTBefPulse;
-					}
-          
-					else if (CSUS == 2)
-					{					
-						USLatency = delayGatingPMTBefPulse;
-						PMTLatency = 0;
-					}
-				}
+        oldStatus = 2;
+      }
 
-				if (CSUS != 2)
-				{
-					startCS(LorR);
-				}
+      break;
+      //* STIM
+    case 1:
 
-				IsNewRep = false;
-			}
+      if (oldStatus != 1) {
+
+        if (IsNewRep) {
+          if (CSUS != 0) {
+            triggerUS = 1;
+
+            if (CSUS == 1) {
+              PMTLatency = USLatency - delayGatingPMTBefPulse;
+            }
+
+            else if (CSUS == 2) {
+              USLatency = delayGatingPMTBefPulse;
+              PMTLatency = 0;
+            }
+          }
+
+          if (CSUS != 2) {
+            startCS(LorR);
+          }
+
+          IsNewRep = false;
+        }
 
 
-		//* If CS is going on and it is time to turn if off, turn it off.
-			if (!IsCSOff)
-			{
-				if (millis() - timerCS >= CSDuration)
-				{
-					finishCS();
-				}
-			}
+        //* If CS is going on and it is time to turn if off, turn it off.
+        if (!IsCSOff) {
+          if (millis() - timerCS >= CSDuration) {
+            finishCS();
+          }
+        }
 
-			if (!IsPMTOff)
-			{
-				if (triggerUS == 1)
-				{
-					if (CSUS == 0 || (CSUS == 1 && millis() - timerCS >= PMTLatency) || CSUS == 2)
-					{
-		//* Switch off the PMT if US is still to happen (triggerUS==1) and it is the right time for it.
-						switchPMT(false);
-					}
-				}
-			}
+        if (!IsPMTOff) {
+          if (triggerUS == 1) {
+            if (CSUS == 0 || (CSUS == 1 && millis() - timerCS >= PMTLatency) || CSUS == 2) {
+              //* Switch off the PMT if US is still to happen (triggerUS==1) and it is the right time for it.
+              switchPMT(false);
+            }
+          }
+        }
 
-			if (IsPMTOff)
-			{
-				if (triggerUS == 1)
-				{
+        if (IsPMTOff) {
+          if (triggerUS == 1) {
 
-		//* Switch on the US.
-					if ((CSUS == 0 && millis() - timerPMT >= USLatency) || (CSUS == 1 && millis() - timerCS >= USLatency) || (CSUS == 2 && millis() - timerPMT >= USLatency))
-					{
-						startUS();
-					}
-				}
+            //* Switch on the US.
+            if ((CSUS == 0 && millis() - timerPMT >= USLatency) || (CSUS == 1 && millis() - timerCS >= USLatency) || (CSUS == 2 && millis() - timerPMT >= USLatency)) {
+              startUS();
+            }
+          }
 
-				if (triggerUS == 2)
-				{
+          if (triggerUS == 2) {
 
-		//* Switch off the US LED.
-					if (millis() - timerUS >= USDuration)
-					{
-						finishUS();
-					}
+            //* Switch off the US LED.
+            if (millis() - timerUS >= USDuration) {
+              finishUS();
+            }
+          }
 
-				}
-
-				if (triggerUS == 3)
-				{
-		//* Switch on the PMT.
-					if (millis() - timerUS > delayGatingPMTAftPulse)
-					{
-						switchPMT(true);
-					}
-				}
-			}
+          if (triggerUS == 3) {
+            //* Switch on the PMT.
+            if (millis() - timerUS > delayGatingPMTAftPulse) {
+              switchPMT(true);
+            }
+          }
+        }
 
 
-		// * Once all stimuli are done, reset.
-			if (IsCSOff && (triggerUS == 0 || triggerUS == 3) && !IsPMTOff)
-			{
-				currentStatus = 0;
-				oldStatus = 1;
-				// IsNewRep = true;
-			}
+        // * Once all stimuli are done, reset.
+        if (IsCSOff && (triggerUS == 0 || triggerUS == 3) && !IsPMTOff) {
+          currentStatus = 0;
+          oldStatus = 1;
+          // IsNewRep = true;
+        }
 
-			break;
-		}
-	}
+        break;
+      }
+  }
 }
 
 // Waits for serial data, and it's called everytime new data comes
 // Full commands always end in '\n'
-void serialEvent()
-{
-	while (Serial.available())
-	{
-		if (!stringComplete)
-		{
-			char inChar = (char)Serial.read();
-			inputString += inChar;
-			if (inChar == '\n')
-				stringComplete = true;
-		}
-	}
+void serialEvent() {
+  while (Serial.available()) {
+    if (!stringComplete) {
+      char inChar = (char)Serial.read();
+      inputString += inChar;
+      if (inChar == '\n')
+        stringComplete = true;
+    }
+  }
 }
 
-int generateCycle(float input)
-{
-	return (int)(min(mainPWMCycle, mainPWMCycle - input * 10 + 1));
+int generateCycle(float input) {
+  return (int)(min(mainPWMCycle, mainPWMCycle - input * 10 + 1));
 }
 
 
-void startCS(boolean LorR)
-{
-		digitalWrite(latchPin, LOW);
+void startCS(boolean LorR) {
+  digitalWrite(latchPin, LOW);
 
-		timerCS = millis();
+  timerCS = millis();
 
-		if (currentRep == 0)
-		{
-			Serial.println("B");
-		}
+  if (currentRep == 0) {
+    Serial.println("B");
+  }
 
-		switch (LorR)
-		{
-		case 0: //* Left side
-			shiftOut(dataPin, clockPin, LSBFIRST, 0b01100000);
-			break;
-		case 1: //* Right side
-			shiftOut(dataPin, clockPin, LSBFIRST, 0b00000110);
-			break;
-		}
+  switch (LorR) {
+    case 0:  //* Left side
+      shiftOut(dataPin, clockPin, LSBFIRST, 0b01100000);
+      break;
+    case 1:  //* Right side
+      shiftOut(dataPin, clockPin, LSBFIRST, 0b00000110);
+      break;
+  }
 
-		digitalWrite(latchPin, HIGH);
+  digitalWrite(latchPin, HIGH);
 
-		IsCSOff = false;
+  IsCSOff = false;
 }
 
-void finishCS()
-{
-	analogWrite(outputEnablePin, 0); // OE (Output Enable) pin is always at 0 V, meaning that the ouput pins are always enabled.
-	digitalWrite(latchPin, LOW);
+void finishCS() {
+  analogWrite(outputEnablePin, 0);  // OE (Output Enable) pin is always at 0 V, meaning that the ouput pins are always enabled.
+  digitalWrite(latchPin, LOW);
 
-	shiftOut(dataPin, clockPin, LSBFIRST, 0b00011000);
-	// switchPMT(true);
+  shiftOut(dataPin, clockPin, LSBFIRST, 0b00011000);
+  // switchPMT(true);
 
-	digitalWrite(latchPin, HIGH);
-	analogWrite(outputEnablePin, 0);
+  digitalWrite(latchPin, HIGH);
+  analogWrite(outputEnablePin, 0);
 
-	if (!IsCSOff)
-	{
-		Serial.println("E");
-		IsCSOff = true;
-	}
+  if (!IsCSOff) {
+    Serial.println("E");
+    IsCSOff = true;
+  }
 }
 
 
-void switchLightsOff()
-{
+void switchLightsOff() {
 
-	switchPMT(false);
+  switchPMT(false);
 
-	analogWrite(outputEnablePin, 0); // OE (Output Enable) pin is always at 0 V, meaning that the ouput pins are always enabled.
-	digitalWrite(latchPin, LOW);
+  analogWrite(outputEnablePin, 0);  // OE (Output Enable) pin is always at 0 V, meaning that the ouput pins are always enabled.
+  digitalWrite(latchPin, LOW);
 
-	//! Here could use the SRCLR (Shift Register Clear) pin, but this pin is connected to VCC.
-	shiftOut(dataPin, clockPin, LSBFIRST, 0b00000000);
-	
-	digitalWrite(latchPin, HIGH);
-	analogWrite(outputEnablePin, 0);
+  //! Here could use the SRCLR (Shift Register Clear) pin, but this pin is connected to VCC.
+  shiftOut(dataPin, clockPin, LSBFIRST, 0b00000000);
+
+  digitalWrite(latchPin, HIGH);
+  analogWrite(outputEnablePin, 0);
 
 
-	if (!IsCSOff)
-	{
-		Serial.println("E");
-		IsCSOff = true;
-	}
+  if (!IsCSOff) {
+    Serial.println("E");
+    IsCSOff = true;
+  }
 
-	// triggerUS == 2 means the US is going on.
-	// if (triggerUS == 2)
-	// {
-	finishUS();
-		// delay(delayGatingPMTAftPulse);
-		// switchPMT(true);
-	// }
+  // triggerUS == 2 means the US is going on.
+  // if (triggerUS == 2)
+  // {
+  finishUS();
+  // delay(delayGatingPMTAftPulse);
+  // switchPMT(true);
+  // }
 }
 
 
 
 
-void startUS()
-{
-	timerUS = millis();
-	
-	Serial.println("b");
+void startUS() {
+  timerUS = millis();
 
-	OCR1A = USPower;
+  Serial.println("b");
 
-	triggerUS = 2; // triggerUS == 2 means that the US LED is blinking.	
+  OCR1A = USPower;
+
+  triggerUS = 2;  // triggerUS == 2 means that the US LED is blinking.
 }
 
-void finishUS()
-{
-	OCR1A = mainPWMCycle;
+void finishUS() {
+  OCR1A = mainPWMCycle;
 
-	if (triggerUS == 2)
-	{
-		Serial.println("e");
+  if (triggerUS == 2) {
+    Serial.println("e");
 
-		// timerUS counts time after the US offset.
-		timerUS = millis();
+    // timerUS counts time after the US offset.
+    timerUS = millis();
 
-		triggerUS = 3;
-	}
+    triggerUS = 3;
+  }
 }
 
 
 
-void switchPMT(boolean PMTOn)
-{
-	if (PMTOn)
-	{
-		digitalWrite(PMTGatingPin, HIGH);
-		Serial.println("P");
-		
-		IsPMTOff = false;
-	}
-	else
-	{
-		digitalWrite(PMTGatingPin, LOW);
-		Serial.println("p");
+void switchPMT(boolean PMTOn) {
+  if (PMTOn) {
+    digitalWrite(PMTGatingPin, HIGH);
+    // Serial.println("P");
 
-		timerPMT = millis();
-		IsPMTOff = true;
-	}
+    IsPMTOff = false;
+  } else {
+    digitalWrite(PMTGatingPin, LOW);
+    // Serial.println("p");
+
+    timerPMT = millis();
+    IsPMTOff = true;
+  }
 }
 
 // int powerLEDCS(float powerCS)
