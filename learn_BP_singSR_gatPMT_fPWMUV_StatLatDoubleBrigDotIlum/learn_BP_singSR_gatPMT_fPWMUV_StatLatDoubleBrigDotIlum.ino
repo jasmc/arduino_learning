@@ -30,8 +30,8 @@ boolean IsPMTOff = false;
 // boolean PMTOff = true;
 
 
-const int delayGatingPMTBefPulse = 500;  // ms
-const int delayGatingPMTAftPulse = 1000;    // ms
+const int delayGatingPMTBefPulse = 175;  // ms
+const int delayGatingPMTAftPulse = 325;    // ms
 // Time each white CS LED is ON
 const int CSDuration = 10000;
 const int mainPWMCycle = 999;
@@ -332,7 +332,8 @@ void finishCS() {
   analogWrite(outputEnablePin, 0);  // OE (Output Enable) pin is always at 0 V, meaning that the ouput pins are always enabled.
   digitalWrite(latchPin, LOW);
 
-  shiftOut(dataPin, clockPin, LSBFIRST, 0b00011000);
+  // shiftOut(dataPin, clockPin, LSBFIRST, 0b00011000);
+  shiftOut(dataPin, clockPin, LSBFIRST, 0b01100000);
   // switchPMT(true);
 
   digitalWrite(latchPin, HIGH);
